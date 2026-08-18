@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="ORCMS">
+  <title>ORCMS</title>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e6c34a"/>
+      <stop offset="1" stop-color="#c9a227"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="64" height="64" rx="12" fill="#0a0a0b"/>
+  <rect x="1.5" y="1.5" width="61" height="61" rx="10.5" fill="none" stroke="url(#g)" stroke-width="2"/>
+
+  <!-- A drum in profile: the unit everything in this system is counted in. -->
+  <g fill="none" stroke="url(#g)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="32" cy="20" rx="13" ry="5.5"/>
+    <path d="M19 20v24c0 3 5.8 5.5 13 5.5s13-2.5 13-5.5V20"/>
+    <path d="M19.5 30c3.2 2 7.6 3 12.5 3s9.3-1 12.5-3M19.5 38c3.2 2 7.6 3 12.5 3s9.3-1 12.5-3"/>
+  </g>
+</svg>
