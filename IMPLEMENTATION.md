@@ -14,7 +14,7 @@ This plan focuses exclusively on the two core operations of the business:
 | Area | Resolution |
 |---|---|
 | Divisions | **UCO** (Used Cooking Oil) and **UEO** (Used Engine Oil / Black Oil) |
-| Deployment | Locally-hosted intranet web app |
+| Deployment | Online: Vercel and Supabase (supersedes the original on-premises decision) |
 | Roles | **Administrator, Accountant, Auditor** — three profiles, no others |
 | Inventory | **UCO drums** and **UEO drums** |
 | Sales Routing | UCO is exclusively **Exported**; UEO is exclusively **Sold Locally** |
@@ -72,7 +72,7 @@ A single centralized web ERP covering two operating divisions plus one shared fi
 | Auth / RBAC | Laravel Fortify + `spatie/laravel-permission` | Role + permission matrix, 2FA (TOTP) built in |
 | Audit trail | `owen-it/laravel-auditing` extended | Automatic before/after diffs on every model |
 | File storage | Local disk `storage/app/attachments`, hashed paths | Slip scans and receipts stay on premises |
-| Deployment | Docker Compose on the office server (Windows Server or Ubuntu VM) | Reproducible, one-command update, no per-laptop installs |
+| Deployment | Vercel (serverless) with Supabase PostgreSQL | Online system, no on-premises component. See DEPLOY.md |
 | Backups | `pg_dump` + attachment `rsync`, nightly, dated, to NAS/second disk | Indefinite retention requirement (SRS §5.1) |
 
 **Alternative if the team is .NET-native:** ASP.NET Core 8 + EF Core + PostgreSQL + Blazor Server. Every schema, rule, and module boundary in this document transfers unchanged; only §2 and §13 differ.

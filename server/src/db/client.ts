@@ -111,15 +111,24 @@ async function createPostgres(url: string): Promise<Db> {
   })();
   const isLocal = host === 'localhost' || host === '127.0.0.1' || host === 'db' || host === '';
 
+  // A serverless container handles one request at a time, so a large pool per
+  // container multiplies straight into the database's connection limit. On
+  // Vercel we hold one or two; on a long-running server, ten.
+  const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+  const maxConnections = Number(process.env.DB_POOL_MAX ?? (isServerless ? 2 : 10));
+
   const pool = new pgLib.Pool({
     connectionString: url,
-    max: 10,
+    max: maxConnections,
     // Supabase terminates TLS at the pooler with its own chain; verifying it
     // needs their CA bundle, which is not something to hardcode. The
     // connection is still encrypted.
     ...(isLocal ? {} : { ssl: { rejectUnauthorized: false } }),
     connectionTimeoutMillis: 20_000,
-    idleTimeoutMillis: 30_000,
+    // Idle connections are released quickly on serverless: a container that is
+    // about to be frozen should not be holding one open.
+    idleTimeoutMillis: isServerless ? 10_000 : 30_000,
+    allowExitOnIdle: isServerless,
   });
 
   pool.on('error', (err) => {

@@ -1,14 +1,16 @@
-q# ORCMS — Completed Features
+# ORCMS — Completed Features
 
-**Stage A (Foundation) complete — A1 through A5.**
 Build order and feature IDs come from [IMPLEMENTATION.md §12](IMPLEMENTATION.md).
 
 | | |
 |---|---|
-| Features complete | **9 of 9** in Stage A (A1–A9) |
-| Tests passing | **105** (0 failures) |
-| Stack | Node 24 · TypeScript · Fastify 5 · React 18 · PostgreSQL 16 |
-| Code | ~5,200 lines across 49 files |
+| Stages complete | A (foundation), B (ledger core), C (inventory), D (master data), F1 (intake), G (finance), H (reports) |
+| Tests passing | **144** (0 failures) |
+| Stack | Node · TypeScript · Fastify 5 · React 18 · PostgreSQL 17 (Supabase) |
+| Deployment | Vercel, serverless. See [DEPLOY.md](DEPLOY.md) |
+
+Not built: **Sales**. Oil can come in but cannot yet go out, so the profit
+report shows costs against no revenue. That is the next build.
 
 ---
 
@@ -17,8 +19,8 @@ Build order and feature IDs come from [IMPLEMENTATION.md §12](IMPLEMENTATION.md
 | Delivered | Where |
 |---|---|
 | npm workspaces (`server`, `web`) with unified scripts | [package.json](package.json) |
-| Docker Compose: app, PostgreSQL 16, nightly backup service | [docker-compose.yml](docker-compose.yml) |
-| Multi-stage Dockerfile, non-root user, healthcheck | [Dockerfile](Dockerfile) |
+| Vercel serverless entry, one Fastify app across both run modes | [api/index.ts](api/index.ts) |
+| Build, routing and function config | [vercel.json](vercel.json) |
 | CI: typecheck, tests, frontend build | [.github/workflows/ci.yml](.github/workflows/ci.yml) |
 | **Second CI job** running migrations against real PostgreSQL 16 | same |
 | Security headers — CSP, HSTS, X-Frame-Options, nosniff, Referrer-Policy | [server/src/app.ts](server/src/app.ts) |
@@ -26,7 +28,7 @@ Build order and feature IDs come from [IMPLEMENTATION.md §12](IMPLEMENTATION.md
 | `.env` loader (no dependency); real env vars always win | [server/src/env.ts](server/src/env.ts) |
 | Production safety assertions — refuses to boot with dev secrets or an embedded DB | same |
 
-**Done when:** `docker compose up` serves a page; CI green. ✅
+**Done when:** the app builds and deploys; CI green. ✅
 
 ---
 
@@ -61,13 +63,13 @@ Build order and feature IDs come from [IMPLEMENTATION.md §12](IMPLEMENTATION.md
 | Delivered | Detail |
 |---|---|
 | Password hashing | scrypt, memory-hard, ~120 ms/hash, salted, no native dependency |
-| Password policy (§10) | 12-char minimum, mixed case, digit, rejects your own name/email and common words |
+| Password policy (§10) | 12-char minimum, mixed case, digit, rejects your own name or login and common words |
 | Account lockout | 5 failed attempts → locked 15 minutes; the **correct** password is refused while locked |
 | Attempt logging | Every attempt recorded with IP, user agent and outcome |
 | Sessions | 8-hour lifetime, 30-minute idle timeout, signed httpOnly `SameSite=strict` cookie |
 | Session revocation | Logout, expiry, idle timeout, and user deactivation all kill live sessions |
 | Password change | Requires the current password; revokes every other session |
-| Enumeration resistance | Unknown email and wrong password return byte-identical responses |
+| Enumeration resistance | Unknown username and wrong password return byte-identical responses |
 
 **Done when:** a wrong password 5× locks the account for 15 minutes and logs every attempt. ✅
 
@@ -75,15 +77,15 @@ Build order and feature IDs come from [IMPLEMENTATION.md §12](IMPLEMENTATION.md
 
 ## A4 — Role-based access control · 22 tests
 
-**5 roles × 20 permissions**, seeded from a single source of truth: [server/src/modules/rbac/matrix.ts](server/src/modules/rbac/matrix.ts). The seeder writes it to the database and the test suite iterates it — if the code and §6.1 ever drift apart, a test fails.
+**3 roles × 20 permissions**, seeded from a single source of truth: [server/src/modules/rbac/matrix.ts](server/src/modules/rbac/matrix.ts). The seeder writes it to the database and the test suite iterates it — if the code and §6.1 ever drift apart, a test fails.
 
-| Role | Permissions | Status at go-live |
+| Role | Permissions | What it is |
 |---|---|---|
-| Administrator | all 20 | enabled |
-| Accountant | 12 | enabled |
-| Auditor | 6 (read-only) | enabled |
-| Manager | 4 | seeded **disabled** (SRS §6.3) |
-| Data Entry Operator | 3 | seeded **disabled** (SRS §6.3) |
+| Administrator | all 20 | Everything the Accountant can do, plus deletion and administration |
+| Accountant | 11 | All day-to-day entry and finance work, but **cannot delete** |
+| Auditor | 6 | Reads everything, changes nothing |
+
+**The one difference between Administrator and Accountant is deletion.**
 
 | Delivered | Detail |
 |---|---|
@@ -91,7 +93,7 @@ Build order and feature IDs come from [IMPLEMENTATION.md §12](IMPLEMENTATION.md
 | Permission-filtered navigation | `/api/nav` returns only what the caller may see; a parent with no visible children is dropped |
 | Honest 403s | Names the missing permission and carries **no payload** |
 | **BR-18** | Only Administrator may delete activity logs — asserted for every role |
-| Field-level design | `profit.view` withheld from Data Entry; enforced server-side, not by hiding UI |
+| Deletion audit | A test sweeps every `*.delete` grant and fails if any role but Administrator holds one |
 
 **Done when:** a test iterates the whole matrix and every cell passes. ✅ — plus 16 explicit denial assertions for the cells that carry business meaning.
 
@@ -126,7 +128,7 @@ RFC 6238 TOTP implemented on `node:crypto` (~60 lines, no dependency), verified 
 | **A6** Application shell | React 18 + TypeScript SPA: login, 2FA enrolment, 2FA challenge, permission-driven sidebar, topbar, dashboard. Light and dark themes. Renders whatever `/api/nav` returns rather than deciding visibility itself |
 | **A7** Activity log | Schema, observers, before/after diffing, secret redaction, denormalised `user_name` so the trail survives user deletion. Login, failed login, lockout, logout, 2FA enrolment, 2FA failure and password change all recorded |
 | **A8** Settings | 11 seeded keys — company profile, fee label, payment methods, costing method, allocation method, capacities, yield tolerance, base currency |
-| **A9** Attachments | Table, SHA-256 hashing, upload metadata; files stored outside the web root and served through an authorising controller |
+| **A9** Attachments | Slip photographs downscaled in the browser, capped at 2 MB by a database constraint, validated by magic bytes, deduplicated by SHA-256, served through an authorising handler |
 
 A7's **viewer UI** and A8's **editor UI** are backend-complete; their admin screens arrive with the user-management work.
 
