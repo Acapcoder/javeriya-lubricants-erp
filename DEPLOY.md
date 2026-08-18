@@ -69,7 +69,19 @@ DATABASE_URL="postgresql://...5432/postgres" npm run seed
 Re-run `npm run migrate` after any deploy that adds one. It is idempotent, so
 running it when nothing is new does nothing.
 
-## 4. Deploy
+## 4. Vercel project settings
+
+These two are easy to get wrong when importing from GitHub, and both cause the
+build to fail:
+
+| Setting | Value | Why |
+|---|---|---|
+| **Root Directory** | leave as the repository root, **not**  | ,  and the npm workspaces all live at the root. Pointing at  means Vercel never sees the config, and installs only part of the dependency tree. |
+| **Framework Preset** | **Other** | Not Fastify. The preset would try to run its own build;  already says how to build. |
+
+Everything else is in  and needs no dashboard configuration.
+
+## 5. Deploy
 
 Connect the GitHub repository in the Vercel dashboard and it builds on every
 push to `main`. Or from the command line:
@@ -81,7 +93,7 @@ vercel link          # once, to attach this folder to a project
 vercel --prod
 ```
 
-## 5. Check it came up
+## 6. Check it came up
 
 ```
 https://your-project.vercel.app/api/health
