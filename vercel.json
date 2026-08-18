@@ -3,7 +3,10 @@
 
   "buildCommand": "npm run build --workspace web",
   "outputDirectory": "server/public",
-  "installCommand": "npm install",
+
+  "//installCommand": "--include=dev is not redundant. If NODE_ENV=production is set as a build variable, npm skips devDependencies, and the build tools (vite, typescript) live there. This makes the install correct either way.",
+  "installCommand": "npm install --include=dev --no-audit --no-fund",
+
   "framework": null,
 
   "functions": {

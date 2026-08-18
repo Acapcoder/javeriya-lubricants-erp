@@ -45,6 +45,12 @@ Preview, if you use it):
 | `SEED_ADMIN_USERNAME` | `admin`, or whatever you prefer |
 | `SEED_ADMIN_PASSWORD` | A strong password, 12+ characters |
 
+**Do not add `NODE_ENV`.** Vercel applies it at runtime already. Setting it as a
+build variable makes npm skip devDependencies, and the build tools live there,
+so the build fails with `vite: command not found`. The install command in
+`vercel.json` passes `--include=dev` to survive this, but the variable is still
+better left unset.
+
 ```bash
 node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
 ```
