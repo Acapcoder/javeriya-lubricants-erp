@@ -23,12 +23,28 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { FastifyInstance } from 'fastify';
 
 /**
- * Declared here rather than under `functions` in vercel.json, because that key
- * is matched as a glob and `[...path]` reads as a character class there, so it
- * does not select this file. `memory` is omitted: Vercel ignores it on Active
- * CPU billing and warns on every build.
+ * `memory` is omitted deliberately: Vercel ignores it on Active CPU billing
+ * and warns about it on every build.
  */
 export const config = { maxDuration: 30 };
+
+interface ServerBundle {
+  buildApp: () => Promise<FastifyInstance>;
+  assertProductionSafety: () => void;
+}
+
+/**
+ * The bundle produced by `npm run build:api`, which is a build step and so does
+ * not exist in a fresh checkout. Held in a variable rather than written inline
+ * so TypeScript does not try to resolve a file that is not there yet; at
+ * runtime it resolves against this module, giving /var/task/server/dist/.
+ *
+ * Importing `../server/src/app.ts` directly is what this replaces. Vercel
+ * compiles this file to JavaScript but does not carry the server's TypeScript
+ * sources into the deployment, so that import failed with "Cannot find module
+ * /var/task/server/src/env.ts" and took the whole function down with it.
+ */
+const SERVER_BUNDLE = '../server/dist/serverless.mjs';
 
 /**
  * Held across invocations on a warm container. The promise, not the instance,
@@ -55,14 +71,13 @@ async function getApp(): Promise<FastifyInstance> {
       required('DATABASE_URL');
       required('SESSION_SECRET');
 
-      // Imported here rather than at module scope on purpose. A failure while
-      // loading the server (a dependency missing from the bundle, a module
-      // that throws as it initialises) would otherwise happen before this
-      // file's own error handling exists, and the platform would report only
+      // Loaded here rather than at module scope on purpose. A failure while
+      // loading the server (a missing bundle, a module that throws as it
+      // initialises) would otherwise happen before this file's own error
+      // handling exists, and the platform would report only
       // FUNCTION_INVOCATION_FAILED with no indication of what broke. Inside
       // the try, the same failure comes back as JSON naming the cause.
-      const { assertProductionSafety } = await import('../server/src/env.ts');
-      const { buildApp } = await import('../server/src/app.ts');
+      const { buildApp, assertProductionSafety } = (await import(SERVER_BUNDLE)) as ServerBundle;
 
       // Refuses a development session secret, an embedded database, or
       // insecure cookies in production. Having no listen() is not a reason to

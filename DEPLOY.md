@@ -129,7 +129,15 @@ password you seeded.
 
 ## How it is wired
 
-- `vercel.json` builds the React app into `server/public`, served from the CDN.
+- `npm run build` does two things: the React app into `server/public`, served
+  from the CDN, and the server into `server/dist/serverless.mjs`, a single
+  JavaScript module the function loads.
+- **Why the server is bundled.** Vercel compiles `api/index.ts` to JavaScript
+  but does not carry `server/src` into the deployment, so a function importing
+  `../server/src/app.ts` dies at load with `Cannot find module
+  /var/task/server/src/env.ts`. Bundling ahead of time (`scripts/build-api.mjs`)
+  takes the platform's TypeScript resolution out of the picture. `includeFiles`
+  in `vercel.json` is what puts the bundle in the function.
 - `api/index.ts` wraps the Fastify app. The `/api/(.*)` rewrite sends every
   `/api/…` path to it at any depth, with the URL intact, which is what Fastify
   routes on. The filename catch-all (`api/[...path].ts`) is the tidier
