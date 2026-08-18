@@ -76,10 +76,10 @@ build to fail:
 
 | Setting | Value | Why |
 |---|---|---|
-| **Root Directory** | leave as the repository root, **not**  | ,  and the npm workspaces all live at the root. Pointing at  means Vercel never sees the config, and installs only part of the dependency tree. |
-| **Framework Preset** | **Other** | Not Fastify. The preset would try to run its own build;  already says how to build. |
+| **Root Directory** | the repository root, **not** `server` | `vercel.json`, `api/` and the npm workspaces all live at the root. Pointing at `server` means Vercel never reads the config, and installs only part of the dependency tree. |
+| **Framework Preset** | **Other** | Not Fastify. A preset brings its own build assumptions; `vercel.json` already says how to build this. |
 
-Everything else is in  and needs no dashboard configuration.
+Everything else lives in `vercel.json` and needs no dashboard configuration.
 
 ## 5. Deploy
 
