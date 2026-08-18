@@ -48,7 +48,24 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   });
 
   const text = await res.text();
-  const body = text ? (JSON.parse(text) as Record<string, unknown>) : {};
+
+  // A non-JSON body means the request never reached the API: a proxy error
+  // page, or the SPA's index.html served because routing missed. Parsing it
+  // blind throws a SyntaxError, which the caller then reports as a generic
+  // failure, hiding the only useful detail. Surface the status instead.
+  let body: Record<string, unknown>;
+  try {
+    body = text ? (JSON.parse(text) as Record<string, unknown>) : {};
+  } catch {
+    throw new ApiError(
+      res.ok
+        ? `The server returned an unexpected response (${res.status}). The API may not be reachable.`
+        : `The server returned ${res.status} without an error message. The API may not be reachable.`,
+      res.status,
+      'NOT_JSON',
+      { preview: text.slice(0, 200) }
+    );
+  }
 
   if (!res.ok) {
     const err = body.error as { message?: string; code?: string; details?: unknown } | undefined;

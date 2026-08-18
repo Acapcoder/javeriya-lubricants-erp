@@ -101,7 +101,7 @@ export const env = {
   /** §10: minimum 12-character passwords. */
   minPasswordLength: int(process.env.MIN_PASSWORD_LENGTH, 12),
 
-  totpIssuer: process.env.TOTP_ISSUER ?? 'ORCMS',
+  totpIssuer: process.env.TOTP_ISSUER ?? 'Javeriya Lubricants',
 
   /** Seeded bootstrap administrator. Change immediately after first login. */
   seedAdminUsername: (process.env.SEED_ADMIN_USERNAME ?? 'admin').toLowerCase(),

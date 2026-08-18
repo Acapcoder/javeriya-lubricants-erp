@@ -934,6 +934,102 @@ code {
 
 .auth-brand { display: flex; align-items: center; gap: var(--s-3); margin-bottom: var(--s-1); }
 
+/* ---- Javeriya Lubricants Brand Styles ---- */
+.jl-auth-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: var(--s-5);
+  gap: var(--s-3);
+}
+
+.jl-auth-brand .jl-logo-icon {
+  filter: drop-shadow(0 4px 12px rgba(212, 175, 55, 0.25));
+  transition: transform 0.2s ease;
+}
+
+.jl-auth-brand .jl-logo-icon:hover {
+  transform: scale(1.04);
+}
+
+.jl-auth-brand-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.jl-brand-name {
+  font-size: 1.65rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  color: var(--fg);
+  line-height: 1.15;
+  background: linear-gradient(135deg, var(--fg) 30%, var(--gold-600) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@media (prefers-color-scheme: dark) {
+  .jl-brand-name {
+    background: linear-gradient(135deg, #ffffff 40%, var(--gold-300) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+.jl-brand-sub {
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.22em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-top: 3px;
+}
+
+.jl-logo-full {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.jl-logo-full .jl-title {
+  display: block;
+  font-size: 1.02rem;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.jl-logo-full .jl-subtitle {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+.jl-logo-compact {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.jl-brand-name-compact {
+  font-weight: 750;
+  font-size: 0.95rem;
+  display: block;
+  line-height: 1.15;
+}
+
+.jl-brand-sub-compact {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--accent);
+  display: block;
+}
+
 .auth-mark {
   width: 46px; height: 46px;
   border-radius: var(--r-md);

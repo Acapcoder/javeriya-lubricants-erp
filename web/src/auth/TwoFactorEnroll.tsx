@@ -84,7 +84,7 @@ export function TwoFactorEnroll() {
           </label>
 
           <button className="btn btn-primary" disabled={!saved} onClick={() => void refresh()}>
-            Continue to ORCMS
+            Continue to Javeriya Lubricants ERP
           </button>
         </div>
       </div>

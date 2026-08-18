@@ -6,44 +6,52 @@ on-premises component.
 ```
   Browser ──▶ Vercel CDN            static React app
           └─▶ Vercel Function       /api/*  (Fastify)
-                   └─▶ Supabase     PostgreSQL 17, transaction pooler
+                   └─▶ Supabase     PostgreSQL 17, session pooler
 ```
 
 ---
 
-## 1. Use the transaction pooler, not the session pooler
+## 1. Which Supabase connection string
 
-This matters more than anything else on this page.
-
-Supabase gives two connection strings. The **session pooler** on port `5432`
-holds one database connection per client, which suits a single long-running
-server. Serverless starts many short-lived containers, each wanting a
-connection, and that exhausts the limit quickly.
-
-Use the **transaction pooler** on port `6543` for Vercel:
+Supabase offers two pooled endpoints. Use the **session pooler** on port `5432`:
 
 ```
-postgresql://postgres.PROJECT_REF:PASSWORD@aws-0-REGION.pooler.supabase.com:6543/postgres
+postgresql://postgres.PROJECT_REF:PASSWORD@aws-0-REGION.pooler.supabase.com:5432/postgres
 ```
 
 Supabase dashboard → Project Settings → Database → Connection string →
-**Transaction pooler**.
+**Session pooler**. The same string runs the migrations from your machine, so
+there is only one to keep track of.
 
-Keep the `5432` session string for running migrations from your machine.
+|  | Session pooler `5432` | Transaction pooler `6543` |
+|---|---|---|
+| Holds | One database connection per client | Connections shared per transaction |
+| Many containers | Can reach the connection limit | Built for it |
+| Prepared statements, `SET`, advisory locks | Work normally | Not available across statements |
+
+Serverless starts many short-lived containers, so the session pooler is the one
+that could eventually run out of connections. Two things keep that far away:
+the pool caps at **2 connections per container** on serverless (see
+`server/src/db/client.ts`), and Vercel reuses a warm container across requests.
+Move to `6543` only if sign-ins start failing with connection errors under real
+load; the app has been verified to work through it, including transactions,
+`SELECT … FOR UPDATE` and the deferred balance trigger.
 
 ## 2. Set the environment variables
 
 Vercel dashboard → Settings → Environment Variables, for Production (and
 Preview, if you use it):
 
-| Name | Value |
-|---|---|
-| `DATABASE_URL` | The **6543** transaction pooler string |
-| `SESSION_SECRET` | Generate one, see below. Never the development default |
-| `COOKIE_SECURE` | `true` |
-| `ENFORCE_2FA` | `true` before real use. `false` only while testing |
-| `SEED_ADMIN_USERNAME` | `admin`, or whatever you prefer |
-| `SEED_ADMIN_PASSWORD` | A strong password, 12+ characters |
+| Name | Value | |
+|---|---|---|
+| `DATABASE_URL` | The **5432** session pooler string | required |
+| `SESSION_SECRET` | Generate one, see below. Never the development default | required |
+| `COOKIE_SECURE` | `true` | defaults to `true` in production |
+| `ENFORCE_2FA` | `true` before real use. `false` only while testing | defaults to `true` |
+
+`SEED_ADMIN_USERNAME` and `SEED_ADMIN_PASSWORD` belong on your machine, not
+here. They are read by `npm run seed`, which you run once against the database;
+the deployed app never looks at them.
 
 **Do not add `NODE_ENV`.** Vercel applies it at runtime already. Setting it as a
 build variable makes npm skip devDependencies, and the build tools live there,
@@ -67,9 +75,10 @@ containers at once, running them at boot means running them concurrently. They
 are a deploy step:
 
 ```bash
-# From your machine, using the SESSION pooler string (port 5432)
+# From your machine, with the same 5432 string you set in Vercel
 DATABASE_URL="postgresql://...5432/postgres" npm run migrate
-DATABASE_URL="postgresql://...5432/postgres" npm run seed
+SEED_ADMIN_USERNAME=admin SEED_ADMIN_PASSWORD='...' \
+  DATABASE_URL="postgresql://...5432/postgres" npm run seed
 ```
 
 Re-run `npm run migrate` after any deploy that adds one. It is idempotent, so
@@ -121,8 +130,11 @@ password you seeded.
 ## How it is wired
 
 - `vercel.json` builds the React app into `server/public`, served from the CDN.
-- `/api/*` rewrites to `api/index.ts`, a serverless function wrapping the
-  Fastify app.
+- `api/[...path].ts` is a catch-all function wrapping the Fastify app. The name
+  is what makes every `/api/…` path reach it with the URL intact, which is what
+  Fastify routes on. A single `api/index.ts` would only answer `/api` itself,
+  and everything else would fall through to the SPA and return HTML where the
+  browser expected JSON.
 - Every other path falls back to `index.html`, because routing is client-side.
 - The Fastify app is built **once per container** and reused, so warm requests
   pay no startup cost and hold one connection pool rather than one per request.

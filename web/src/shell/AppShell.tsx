@@ -3,6 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { api, type NavItem } from '../api';
 import { useAuth } from '../auth/AuthContext';
 import { Icon, iconForPath } from '../components/Icon';
+import { LogoIcon } from '../components/Logo';
 
 /**
  * A full sidebar, always showing every destination the user is allowed to see.
@@ -18,14 +19,14 @@ import { Icon, iconForPath } from '../components/Icon';
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, signOut } = useAuth();
   const [nav, setNav] = useState<NavItem[]>([]);
-  const [company, setCompany] = useState('ORCMS');
+  const [company, setCompany] = useState('Javeriya Lubricants');
   const [open, setOpen] = useState(false);
   const [userMenu, setUserMenu] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
     void api.nav().then((r) => setNav(r.items)).catch(() => setNav([]));
-    void api.reference().then((r) => setCompany(r.company?.name || 'ORCMS')).catch(() => {});
+    void api.reference().then((r) => setCompany(r.company?.name || 'Javeriya Lubricants')).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -58,10 +59,10 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="app">
       <aside className={open ? 'sidebar open' : 'sidebar'} aria-label="Sections">
         <div className="sidebar-head">
-          <span className="brand-mark">OR</span>
+          <LogoIcon size={38} />
           <div className="brand-text">
             <strong>{company}</strong>
-            <small>Cooking oil, engine oil</small>
+            <small>UCO · UEO · Recycling</small>
           </div>
         </div>
 
@@ -97,10 +98,10 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Icon name="menu" />
         </button>
 
-        <span className="brand-mark">OR</span>
+        <LogoIcon size={34} />
         <div className="brand-text">
           <strong>{company}</strong>
-          <small>Cooking oil, engine oil</small>
+          <small>UCO · UEO · Recycling</small>
         </div>
 
         <button

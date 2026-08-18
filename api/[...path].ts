@@ -1,8 +1,12 @@
 /**
- * Vercel serverless entry point.
+ * Vercel serverless entry point, as a catch-all route.
  *
  * Different shape from server/src/index.ts, and deliberately so:
  *
+ *   - The filename is Vercel's catch-all convention, so every /api/* path
+ *     reaches this one function with its original URL intact. That is what
+ *     Fastify needs to route on, and it does not depend on a rewrite rule
+ *     matching correctly.
  *   - No app.listen(). Vercel owns the socket; we hand Fastify the raw
  *     request and let it reply.
  *   - No migrations. On a platform that may start a dozen containers at once,

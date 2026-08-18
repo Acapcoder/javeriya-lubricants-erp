@@ -77,7 +77,7 @@ const ITEMS: Array<{ code: string; name: string; division: string; valued: boole
 ];
 
 const SETTINGS: Array<[string, unknown]> = [
-  ['company.profile', { name: 'Oil Recycling Company', address: '', phone: '', email: '', taxId: '' }],
+  ['company.profile', { name: 'Javeriya Lubricants', address: '', phone: '', email: '', taxId: '' }],
   ['fee.label', { singular: 'Weight Fee', plural: 'Weight Fees' }],
   ['refund.aging_days', { threshold: 45 }],
   ['year_end.lock_policy', { lockClosedYears: true, allowUnlockByAdmin: true }],

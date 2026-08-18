@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { ApiError } from '../api';
 import { useAuth } from './AuthContext';
+import { Logo } from '../components/Logo';
 
 export function LoginPage() {
   const { signIn } = useAuth();
@@ -27,13 +28,10 @@ export function LoginPage() {
   return (
     <div className="auth-shell">
       <form className="auth-card" onSubmit={onSubmit}>
-        <div className="auth-brand">
-          <span className="auth-mark">OR</span>
-          <div>
-            <h1 className="auth-title">ORCMS</h1>
-          </div>
-        </div>
-        <p className="auth-sub">Integrated Oil, Water &amp; Recycling ERP</p>
+        <Logo variant="auth" />
+        <p className="auth-sub" style={{ textAlign: 'center', marginTop: -8, marginBottom: 24 }}>
+          UCO · UEO · Recycling &amp; Water Treatment
+        </p>
 
         {error && <div className="alert alert-error">{error}</div>}
 

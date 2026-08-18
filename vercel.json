@@ -5,13 +5,12 @@
   "buildCommand": "npm run build --workspace web",
   "outputDirectory": "server/public",
   "functions": {
-    "api/index.ts": {
+    "api/[...path].ts": {
       "memory": 512,
       "maxDuration": 30
     }
   },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
   "headers": [
