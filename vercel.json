@@ -1,26 +1,19 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-
+  "framework": null,
+  "installCommand": "npm install --include=dev --no-audit --no-fund",
   "buildCommand": "npm run build --workspace web",
   "outputDirectory": "server/public",
-
-  "//installCommand": "--include=dev is not redundant. If NODE_ENV=production is set as a build variable, npm skips devDependencies, and the build tools (vite, typescript) live there. This makes the install correct either way.",
-  "installCommand": "npm install --include=dev --no-audit --no-fund",
-
-  "framework": null,
-
   "functions": {
     "api/index.ts": {
       "memory": 512,
       "maxDuration": 30
     }
   },
-
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
-
   "headers": [
     {
       "source": "/assets/(.*)",

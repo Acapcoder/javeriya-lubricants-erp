@@ -87,6 +87,14 @@ build to fail:
 
 Everything else lives in `vercel.json` and needs no dashboard configuration.
 
+> `vercel.json` is validated against a strict schema. Any key Vercel does not
+> recognise is rejected outright, and JSON has no comments, so notes about the
+> config belong in this file rather than in it.
+
+**Why the install command passes `--include=dev`:** if `NODE_ENV=production` is
+set as a build variable, npm skips devDependencies, and the build tools live
+there. The flag makes the install correct either way.
+
 ## 5. Deploy
 
 Connect the GitHub repository in the Vercel dashboard and it builds on every
