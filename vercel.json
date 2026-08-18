@@ -4,12 +4,6 @@
   "installCommand": "npm install --include=dev --no-audit --no-fund",
   "buildCommand": "npm run build --workspace web",
   "outputDirectory": "server/public",
-  "functions": {
-    "api/[...path].ts": {
-      "memory": 512,
-      "maxDuration": 30
-    }
-  },
   "rewrites": [
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],

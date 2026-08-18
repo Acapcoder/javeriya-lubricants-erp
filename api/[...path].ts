@@ -23,6 +23,14 @@ import { buildApp } from '../server/src/app.ts';
 import { assertProductionSafety } from '../server/src/env.ts';
 
 /**
+ * Declared here rather than under `functions` in vercel.json, because that key
+ * is matched as a glob and `[...path]` reads as a character class there, so it
+ * does not select this file. `memory` is omitted: Vercel ignores it on Active
+ * CPU billing and warns on every build.
+ */
+export const config = { maxDuration: 30 };
+
+/**
  * Held across invocations on a warm container. The promise, not the instance,
  * so two requests arriving during a cold start share one initialisation
  * instead of racing to build two apps.
@@ -65,10 +73,21 @@ async function getApp(): Promise<FastifyInstance> {
   return appPromise;
 }
 
+/**
+ * Vercel treats the returned promise as the life of the invocation, and tears
+ * the container down once it settles. `emit('request')` only *starts* Fastify
+ * handling, so returning straight after it ends the invocation while the reply
+ * is still being written, and the platform reports FUNCTION_INVOCATION_FAILED.
+ * Wait for the response to actually finish.
+ */
 export default async function handler(req: IncomingMessage, res: ServerResponse): Promise<void> {
   try {
     const app = await getApp();
-    app.server.emit('request', req, res);
+    await new Promise<void>((resolve) => {
+      res.once('close', resolve);
+      res.once('finish', resolve);
+      app.server.emit('request', req, res);
+    });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Startup failed';
     process.stderr.write(`serverless startup failed: ${message}\n`);
