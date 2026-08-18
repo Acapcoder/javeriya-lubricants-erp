@@ -1,12 +1,14 @@
 /**
- * Vercel serverless entry point, as a catch-all route.
+ * Vercel serverless entry point.
  *
  * Different shape from server/src/index.ts, and deliberately so:
  *
- *   - The filename is Vercel's catch-all convention, so every /api/* path
- *     reaches this one function with its original URL intact. That is what
- *     Fastify needs to route on, and it does not depend on a rewrite rule
- *     matching correctly.
+ *   - One function answers every /api path, via the rewrite in vercel.json.
+ *     A filename catch-all (api/[...path].ts) is the tidier convention but
+ *     was measurably only matching a single segment on this project: /api/nav
+ *     reached the function while /api/auth/me returned a platform 404. The
+ *     rewrite matches at any depth and the request keeps its original URL,
+ *     which is what Fastify routes on.
  *   - No app.listen(). Vercel owns the socket; we hand Fastify the raw
  *     request and let it reply.
  *   - No migrations. On a platform that may start a dozen containers at once,
@@ -89,6 +91,25 @@ async function getApp(): Promise<FastifyInstance> {
  */
 export default async function handler(req: IncomingMessage, res: ServerResponse): Promise<void> {
   try {
+    // The rewrite selects this function but must leave the URL alone, because
+    // Fastify has no other way to know which route was asked for. If that ever
+    // stops holding, every request would arrive as /api/index and Fastify would
+    // answer a puzzling 404 for routes that plainly exist. Say so instead.
+    if (req.url === '/api/index' || req.url?.startsWith('/api/index?')) {
+      res.statusCode = 500;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(
+        JSON.stringify({
+          error: {
+            code: 'PATH_NOT_PRESERVED',
+            message:
+              'The platform rewrote the request path before it reached the API, so the original route is unknown.',
+          },
+        })
+      );
+      return;
+    }
+
     const app = await getApp();
     await new Promise<void>((resolve) => {
       res.once('close', resolve);

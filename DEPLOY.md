@@ -130,11 +130,12 @@ password you seeded.
 ## How it is wired
 
 - `vercel.json` builds the React app into `server/public`, served from the CDN.
-- `api/[...path].ts` is a catch-all function wrapping the Fastify app. The name
-  is what makes every `/api/…` path reach it with the URL intact, which is what
-  Fastify routes on. A single `api/index.ts` would only answer `/api` itself,
-  and everything else would fall through to the SPA and return HTML where the
-  browser expected JSON.
+- `api/index.ts` wraps the Fastify app. The `/api/(.*)` rewrite sends every
+  `/api/…` path to it at any depth, with the URL intact, which is what Fastify
+  routes on. The filename catch-all (`api/[...path].ts`) is the tidier
+  convention and was tried first, but on this project it only ever matched a
+  single segment: `/api/nav` reached the function while `/api/auth/me` returned
+  a platform 404 before the function ran.
 - Every other path falls back to `index.html`, because routing is client-side.
 - The Fastify app is built **once per container** and reused, so warm requests
   pay no startup cost and hold one connection pool rather than one per request.
@@ -157,9 +158,15 @@ Supabase takes its own database backups, so the data itself is covered.
 filesystem, so they work unchanged and are included in Supabase's backups. The
 2 MB cap keeps requests inside the function body limit.
 
-**Function timeout.** Set to 30 seconds in `vercel.json`. Every request in the
-system finishes well inside that; a request approaching it means something is
-wrong rather than slow.
+**Function timeout.** 30 seconds, declared by the `config` export in
+`api/index.ts` rather than in `vercel.json`. Every request in the system
+finishes well inside that; one approaching it means something is wrong rather
+than slow.
+
+**When the API returns 500.** The body names the cause. `STARTUP_FAILED` with a
+message about a variable means that variable is missing from the Vercel
+project. Set `DEBUG_STARTUP=1` to have the stack included as well, and remove
+it afterwards.
 
 ## Rotating the database password
 
