@@ -47,10 +47,9 @@ async function getApp(): Promise<FastifyInstance> {
       required('DATABASE_URL');
       required('SESSION_SECRET');
 
-      // The same guard the office deployment runs at boot: refuses a
-      // development session secret, an embedded database, or insecure cookies
-      // in production. A deployment shape should not change what counts as
-      // safe, so this must not be skipped just because there is no listen().
+      // Refuses a development session secret, an embedded database, or
+      // insecure cookies in production. Having no listen() is not a reason to
+      // skip it: the deployment shape does not change what counts as safe.
       assertProductionSafety();
 
       const app = await buildApp();
