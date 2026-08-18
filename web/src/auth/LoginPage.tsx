@@ -72,13 +72,6 @@ export function LoginPage() {
         <p className="field-hint" style={{ marginTop: 16, textAlign: 'center' }}>
           Five failed attempts lock the account for 15 minutes.
         </p>
-
-        <div className="made-by" style={{ textAlign: 'center', marginTop: 26 }}>
-          Powered by{' '}
-          <a href="https://buzzetric.com" target="_blank" rel="noreferrer noopener">
-            Buzzetric
-          </a>
-        </div>
       </form>
     </div>
   );

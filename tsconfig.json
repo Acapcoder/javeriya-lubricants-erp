@@ -1,0 +1,19 @@
+{
+  // For the Vercel function in api/ only. Each workspace keeps its own config;
+  // this exists because the platform type-checks api/ from the repository root,
+  // finds nothing, falls back to bare defaults, and then reports TS5097 on
+  // every `.ts` import it follows into server/src.
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "types": ["node"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true
+  },
+  "include": ["api/**/*.ts"]
+}

@@ -19,8 +19,6 @@
  */
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { FastifyInstance } from 'fastify';
-import { buildApp } from '../server/src/app.ts';
-import { assertProductionSafety } from '../server/src/env.ts';
 
 /**
  * Declared here rather than under `functions` in vercel.json, because that key
@@ -54,6 +52,15 @@ async function getApp(): Promise<FastifyInstance> {
       // inside the pool when configuration is missing.
       required('DATABASE_URL');
       required('SESSION_SECRET');
+
+      // Imported here rather than at module scope on purpose. A failure while
+      // loading the server (a dependency missing from the bundle, a module
+      // that throws as it initialises) would otherwise happen before this
+      // file's own error handling exists, and the platform would report only
+      // FUNCTION_INVOCATION_FAILED with no indication of what broke. Inside
+      // the try, the same failure comes back as JSON naming the cause.
+      const { assertProductionSafety } = await import('../server/src/env.ts');
+      const { buildApp } = await import('../server/src/app.ts');
 
       // Refuses a development session secret, an embedded database, or
       // insecure cookies in production. Having no listen() is not a reason to
@@ -90,9 +97,22 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Startup failed';
-    process.stderr.write(`serverless startup failed: ${message}\n`);
+    const stack = err instanceof Error ? err.stack : undefined;
+    process.stderr.write(`serverless startup failed: ${stack ?? message}\n`);
     res.statusCode = 500;
     res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify({ error: { code: 'STARTUP_FAILED', message } }));
+    res.end(
+      JSON.stringify({
+        error: {
+          code: 'STARTUP_FAILED',
+          message,
+          // Only with DEBUG_STARTUP set, so a stack trace is never public by
+          // default. Startup failures are configuration or packaging faults
+          // and the trace is the whole diagnosis, so it needs to be reachable
+          // without shell access to the container.
+          ...(process.env.DEBUG_STARTUP ? { stack: stack?.split('\n').slice(0, 8) } : {}),
+        },
+      })
+    );
   }
 }

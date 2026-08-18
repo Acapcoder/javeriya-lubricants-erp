@@ -82,13 +82,6 @@ export function AppShell({ children }: { children: ReactNode }) {
             ))}
           </div>
         ))}
-
-        <div className="made-by">
-          Powered by{' '}
-          <a href="https://buzzetric.com" target="_blank" rel="noreferrer noopener">
-            Buzzetric
-          </a>
-        </div>
       </aside>
 
       {open && <div className="scrim" onClick={() => setOpen(false)} />}
