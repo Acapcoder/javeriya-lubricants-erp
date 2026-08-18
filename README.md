@@ -159,7 +159,3 @@ pooler, set the environment variables, and deploy.
 The app refuses to start in production with a development session secret, an
 embedded database, or insecure cookies. A misconfigured deployment fails loudly
 rather than running insecurely.
-
----
-
-Powered by [Buzzetric](https://buzzetric.com)
